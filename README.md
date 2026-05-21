@@ -10,7 +10,7 @@
 
 ### About
 
-This is the monorepo for Loomix — a polished React video player with scrubbable progress, volume, playback speed, captions, picture-in-picture, fullscreen, and a built-in "Watch on YouTube" affordance, all in a single drop-in component.
+This is the monorepo for Loomix, a polished React video player with scrubbable progress, volume, playback speed, captions, picture-in-picture, fullscreen, and much more, all in a single drop-in component.
 
 ### Packages
 
@@ -23,7 +23,7 @@ This is the monorepo for Loomix — a polished React video player with scrubbabl
 ### Install
 
 ```bash
-# via the shadcn CLI (recommended — copies the source into your project)
+# via the shadcn CLI (recommended, copies the source into your project)
 npx shadcn@latest add https://loomix.harshsingh.me/r/loomix-player.json
 
 # or as a traditional npm package
@@ -64,8 +64,8 @@ import { LoomixPlayer } from "@/components/ui/loomix-player";
 export default function Demo() {
   return (
     <LoomixPlayer
-      src="/croatia.webm"
-      youtubeUrl="https://youtube.com/watch?v=dq4n71jWZkk"
+      src="/video.webm"
+      youtubeUrl="https://youtu.be/dQw4w9WgXcQ?si=by-1sK-GbOFE8D9_"
       className="aspect-video w-full max-w-4xl"
     />
   );
