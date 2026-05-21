@@ -180,9 +180,17 @@ export default function Home() {
       if (event.key === "p" || event.key === "P") {
         event.preventDefault();
         setIsPlaying((value) => !value);
-      } else if (event.key === "Escape") {
+        return;
+      }
+      if (event.key === "Escape") {
         setIsPlaying(false);
-      } else if (event.key === "ArrowRight") {
+        return;
+      }
+      // While the player modal is open let LoomixPlayer own all the other
+      // shortcuts (Space/K, M, F, C, arrow keys, etc.) — don't let the page
+      // navigate episodes underneath it.
+      if (isPlaying) return;
+      if (event.key === "ArrowRight") {
         setActiveIndex((index) => {
           const next = Math.min(EPISODES.length - 1, index + 1);
           if (next !== index) void playToggle();
@@ -198,7 +206,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [playToggle, isDocsOpen]);
+  }, [playToggle, isDocsOpen, isPlaying]);
 
   useEffect(() => {
     const rail = railRef.current;
@@ -512,6 +520,7 @@ export default function Home() {
                 src={active.src}
                 title={active.title}
                 autoPlay
+                autoFocus
                 ariaLabel={`${active.title} teaser`}
                 youtubeUrl={active.youtubeUrl}
                 onClose={closePlayer}

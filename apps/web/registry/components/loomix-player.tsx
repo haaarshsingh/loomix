@@ -44,6 +44,8 @@ export type LoomixPlayerProps = {
   ariaLabel?: string;
   /** Auto-play on mount. Defaults to false. */
   autoPlay?: boolean;
+  /** Move keyboard focus to the player on mount so its shortcuts work immediately. Defaults to false. */
+  autoFocus?: boolean;
   /** Start muted. Defaults to false. */
   muted?: boolean;
   /** Loop video. Defaults to false. */
@@ -95,6 +97,7 @@ export function LoomixPlayer({
   captions,
   ariaLabel,
   autoPlay = false,
+  autoFocus = false,
   muted = false,
   loop = false,
   disablePictureInPicture = false,
@@ -152,6 +155,16 @@ export function LoomixPlayer({
       }
     };
   }, [scheduleHide]);
+
+  React.useEffect(() => {
+    if (!autoFocus) return;
+    // Focus on the next frame so the element is mounted and the parent
+    // (e.g. a modal animating in) isn't fighting for focus.
+    const id = window.requestAnimationFrame(() => {
+      containerRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [autoFocus]);
 
   React.useEffect(() => {
     const video = videoRef.current;
