@@ -13,8 +13,16 @@ import {
   useReducedMotion,
   type Transition,
 } from "motion/react";
-import { IconPlayerPlayFilled } from "@tabler/icons-react";
+import {
+  IconBookFilled,
+  IconBrandGithub,
+  IconBrandX,
+  IconPlayerPlayFilled,
+} from "@tabler/icons-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useSound } from "react-sounds";
+import { LoomixPlayer } from "@repo/ui";
 
 type Episode = {
   id: string;
@@ -122,7 +130,6 @@ export default function Home() {
   const reduceMotion = useReducedMotion();
 
   const railRef = useRef<HTMLDivElement | null>(null);
-  const playerVideoRef = useRef<HTMLVideoElement | null>(null);
   const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -136,7 +143,12 @@ export default function Home() {
     rail.scrollBy({ left: amount * direction, behavior: "smooth" });
   }, []);
 
-  const openPlayer = useCallback(() => setIsPlaying(true), []);
+  const { play: playToggle } = useSound("ui/toggle_on");
+
+  const openPlayer = useCallback(() => {
+    void playToggle();
+    setIsPlaying(true);
+  }, [playToggle]);
   const closePlayer = useCallback(() => setIsPlaying(false), []);
 
   useEffect(() => {
@@ -148,39 +160,42 @@ export default function Home() {
       } else if (event.key === "Escape") {
         setIsPlaying(false);
       } else if (event.key === "ArrowRight") {
-        setActiveIndex((index) => Math.min(EPISODES.length - 1, index + 1));
+        setActiveIndex((index) => {
+          const next = Math.min(EPISODES.length - 1, index + 1);
+          if (next !== index) void playToggle();
+          return next;
+        });
       } else if (event.key === "ArrowLeft") {
-        setActiveIndex((index) => Math.max(0, index - 1));
+        setActiveIndex((index) => {
+          const next = Math.max(0, index - 1);
+          if (next !== index) void playToggle();
+          return next;
+        });
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
+  }, [playToggle]);
 
   useEffect(() => {
     const rail = railRef.current;
     if (!rail) return;
-    const card = rail.children[activeIndex];
-    if (!(card instanceof HTMLElement)) return;
-    card.scrollIntoView({
-      behavior: reduceMotion || isFirstRender.current ? "auto" : "smooth",
-      block: "nearest",
-      inline: "start",
+    const styles = getComputedStyle(rail);
+    const gap =
+      parseFloat(styles.columnGap) || parseFloat(styles.gap) || 0;
+    // Inactive thumb width is fixed (see ThumbCard); compute the rail's
+    // resting scroll position from layout math rather than the DOM, so the
+    // computation is stable even while motion is animating the active card's
+    // width (which transiently shifts subsequent cards' offsetLeft).
+    const inactiveWidth = 148;
+    const desiredScrollLeft = activeIndex * (inactiveWidth + gap);
+    rail.scrollTo({
+      left: desiredScrollLeft,
+      behavior:
+        reduceMotion || isFirstRender.current ? "auto" : "smooth",
     });
     isFirstRender.current = false;
   }, [activeIndex, reduceMotion]);
-
-  useEffect(() => {
-    const video = playerVideoRef.current;
-    if (!video) return;
-    if (isPlaying) {
-      video.currentTime = 0;
-      video.muted = false;
-      void video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
-  }, [isPlaying, activeIndex]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[var(--color-page)] font-sans text-neutral-100">
@@ -217,34 +232,76 @@ export default function Home() {
       </div>
 
       <div
-        className="relative z-10 flex h-full flex-col gap-6 px-[clamp(28px,4.5vw,64px)] py-7"
+        className="relative z-10 flex h-full flex-col gap-5 px-[clamp(20px,4.5vw,64px)] py-5 sm:gap-6 sm:py-7"
         style={
           {
             "--content-left-offset":
-              "max(0px, calc((100vw - 2 * clamp(28px, 4.5vw, 64px) - 600px) / 2))",
+              "max(0px, calc((100vw - 2 * clamp(20px, 4.5vw, 64px) - 600px) / 2))",
             "--rail-pad-start":
-              "calc(clamp(28px, 4.5vw, 64px) + var(--content-left-offset))",
+              "calc(clamp(20px, 4.5vw, 64px) + var(--content-left-offset))",
             "--rail-pad-end":
-              "max(clamp(28px, 4.5vw, 64px), calc(100vw - var(--rail-pad-start) - 192px))",
+              "max(clamp(20px, 4.5vw, 64px), calc(100vw - var(--rail-pad-start) - 192px))",
           } as CSSProperties
         }
       >
-        <header className="inline-flex shrink-0 items-center gap-3 text-base font-medium text-white/90">
-          <Image
-            src="/icon.png"
-            alt=""
-            aria-hidden
-            draggable={false}
-            width={28}
-            height={28}
-            className="rounded-full"
-          />
-          <span className="leading-tight font-semibold">Loomix</span>
+        <header className="mx-auto flex w-full max-w-[600px] shrink-0 items-center justify-between">
+          <div className="inline-flex items-center gap-2.5 text-sm font-medium text-white/90 sm:gap-3 sm:text-base">
+            <Image
+              src="/icon.png"
+              alt=""
+              aria-hidden
+              draggable={false}
+              width={28}
+              height={28}
+              className="h-6 w-6 rounded-full sm:h-7 sm:w-7"
+            />
+            <span className="leading-tight font-semibold">Loomix</span>
+          </div>
+
+          <nav
+            aria-label="Primary"
+            className="flex items-center gap-2 text-sm font-medium"
+          >
+            <Link
+              href="/docs"
+              onClick={() => {
+                void playToggle();
+              }}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1.5 text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 hover:bg-white/[0.12] hover:text-white"
+            >
+              <IconBookFilled size={15} aria-hidden />
+              Docs
+            </Link>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label="GitHub"
+              onClick={() => {
+                void playToggle();
+              }}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 hover:bg-white/[0.12] hover:text-white"
+            >
+              <IconBrandGithub size={18} aria-hidden stroke={1.75} />
+            </a>
+            <a
+              href="https://x.com"
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label="X"
+              onClick={() => {
+                void playToggle();
+              }}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 hover:bg-white/[0.12] hover:text-white"
+            >
+              <IconBrandX size={15} aria-hidden stroke={1.75} />
+            </a>
+          </nav>
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col justify-end overflow-hidden">
           <section
-            className="mx-auto w-full max-w-[600px] pb-[clamp(40px,8vh,90px)]"
+            className="mx-auto w-full max-w-[600px] pb-4 sm:pb-[clamp(40px,8vh,90px)]"
             aria-live="polite"
           >
           <AnimatePresence mode="wait" initial={false}>
@@ -270,7 +327,7 @@ export default function Home() {
               style={{ willChange: "filter, transform, opacity" }}
             >
               <p
-                className="mb-3.5 text-[11px] font-medium tracking-[0.22em] text-white/70 uppercase"
+                className="mb-3 text-[10px] font-medium tracking-[0.2em] text-white/70 uppercase sm:mb-3.5 sm:text-[11px] sm:tracking-[0.22em]"
                 style={{
                   fontFamily:
                     "var(--font-space-mono), ui-monospace, monospace",
@@ -279,13 +336,13 @@ export default function Home() {
                 {active.region}
               </p>
               <h1
-                className="mb-5 text-[clamp(44px,6.2vw,84px)] leading-none font-semibold tracking-[-0.025em]"
+                className="mb-3.5 text-[clamp(34px,9vw,84px)] leading-[1.02] font-semibold tracking-[-0.02em] sm:mb-5 sm:text-[clamp(44px,6.2vw,84px)] sm:leading-none sm:tracking-[-0.025em]"
                 style={{ textShadow: "0 1px 30px rgba(0,0,0,0.45)" }}
               >
                 {active.title}
               </h1>
               <p
-                className="mb-6 max-w-[460px] text-[14.5px] leading-[1.6] text-balance text-white/[0.88]"
+                className="mb-5 text-[13.5px] leading-[1.55] text-balance text-white/[0.88] sm:mb-6 sm:max-w-[460px] sm:text-[14.5px] sm:leading-[1.6]"
                 style={{ textShadow: "0 1px 12px rgba(0,0,0,0.6)" }}
               >
                 {active.description}
@@ -296,7 +353,7 @@ export default function Home() {
                 onClick={openPlayer}
                 whileTap={{ scale: 0.97 }}
                 transition={TAP_TRANSITION}
-                className="inline-flex items-center gap-2.5 rounded-full border border-white/50 px-4 py-2 text-sm font-medium text-neutral-900 backdrop-blur-[24px] backdrop-saturate-[1.4] hover:bg-white/95"
+                className="inline-flex items-center gap-2 rounded-full border border-white/50 px-3.5 py-1.5 text-[13px] font-medium text-neutral-900 backdrop-blur-[24px] backdrop-saturate-[1.4] hover:bg-white/95 sm:gap-2.5 sm:px-4 sm:py-2 sm:text-sm"
                 style={{
                   background: "rgba(240,240,240,0.92)",
                   boxShadow:
@@ -310,7 +367,7 @@ export default function Home() {
                 />
                 Play video
                 <kbd
-                  className="ml-1 inline-flex h-[22px] min-w-[22px] items-center justify-center rounded-md bg-black/10 px-1.5 text-[11px] font-bold text-neutral-900/75"
+                  className="ml-1 hidden h-[22px] min-w-[22px] items-center justify-center rounded-md bg-black/10 px-1.5 text-[11px] font-bold text-neutral-900/75 sm:inline-flex"
                   style={{
                     fontFamily:
                       "var(--font-space-mono), ui-monospace, monospace",
@@ -320,7 +377,7 @@ export default function Home() {
                 </kbd>
               </motion.button>
 
-              <div className="mt-5 flex flex-wrap items-center gap-2.5 text-xs text-white/[0.78]">
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-white/[0.78] sm:mt-5 sm:gap-2.5 sm:text-xs">
                 <span>{active.date}</span>
                 <span className="inline-block h-[3px] w-[3px] rounded-full bg-white/45" />
                 <span>{active.duration}</span>
@@ -349,10 +406,10 @@ export default function Home() {
 
           <div
             ref={railRef}
-            className="scrollbar-none flex h-[180px] items-end gap-6 overflow-x-auto overflow-y-hidden pt-6 pb-1.5"
+            className="scrollbar-none flex h-[180px] items-end gap-4 overflow-x-auto overflow-y-hidden pt-6 pb-1.5 sm:gap-6"
             style={{
               scrollBehavior: "smooth",
-              marginInline: "calc(-1 * clamp(28px, 4.5vw, 64px))",
+              marginInline: "calc(-1 * clamp(20px, 4.5vw, 64px))",
               paddingInlineStart: "var(--rail-pad-start)",
               paddingInlineEnd: "var(--rail-pad-end)",
               scrollPaddingInlineStart: "var(--rail-pad-start)",
@@ -404,22 +461,27 @@ export default function Home() {
                 />
               </svg>
             </motion.button>
-            <motion.video
-              ref={playerVideoRef}
-              src={active.src}
-              controls
-              autoPlay
-              playsInline
+            <motion.div
+              key={active.id}
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
               transition={{ duration: 0.3, ease: EASE_OUT }}
-              className="max-h-[86vh] w-full rounded-[14px] bg-black"
+              onClick={(event) => event.stopPropagation()}
+              className="w-full"
               style={{
                 maxWidth: "min(1280px, 92vw)",
                 boxShadow: "0 30px 80px rgba(0,0,0,0.55)",
               }}
-            />
+            >
+              <LoomixPlayer
+                src={active.src}
+                autoPlay
+                ariaLabel={`${active.title} teaser`}
+                youtubeUrl="https://www.youtube.com"
+                className="aspect-video max-h-[86vh] w-full rounded-[14px]"
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -467,17 +529,14 @@ function ThumbCard({
   isActive: boolean;
   onSelect: () => void;
 }) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
   return (
     <motion.button
       type="button"
       onClick={onSelect}
       aria-current={isActive ? "true" : undefined}
-      whileHover={isActive ? undefined : { scale: 1.04 }}
       whileTap={{ scale: 0.97 }}
       transition={TAP_TRANSITION}
-      className="group flex flex-none flex-col items-start gap-2.5 text-left snap-start focus:outline-none"
+      className="flex flex-none flex-col items-start gap-2.5 text-left snap-start focus:outline-none"
     >
       <motion.div
         initial={false}
@@ -492,29 +551,12 @@ function ThumbCard({
         className="relative overflow-hidden rounded-[10px] bg-neutral-900"
       >
         <video
-          ref={videoRef}
           src={episode.src}
           muted
           loop
           playsInline
           preload="metadata"
           className="block h-full w-full object-cover"
-          onMouseEnter={(event) => {
-            if (isActive) return;
-            event.currentTarget.play().catch(() => {});
-          }}
-          onMouseLeave={(event) => {
-            event.currentTarget.pause();
-            event.currentTarget.currentTime = 0;
-          }}
-        />
-        <span
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-          style={{
-            background:
-              "linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.5) 100%)",
-          }}
-          aria-hidden
         />
       </motion.div>
       <motion.span
