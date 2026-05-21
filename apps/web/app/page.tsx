@@ -16,13 +16,14 @@ import {
 import {
   IconBookFilled,
   IconBrandGithub,
+  IconSphere2,
   IconBrandX,
   IconPlayerPlayFilled,
 } from "@tabler/icons-react";
-import Image from "next/image";
-import Link from "next/link";
 import { useSound } from "react-sounds";
+import { Drawer } from "vaul";
 import { LoomixPlayer } from "@repo/ui";
+import { DocsContent } from "../components/docs-content";
 
 type Episode = {
   id: string;
@@ -33,6 +34,7 @@ type Episode = {
   src: string;
   duration: string;
   date: string;
+  youtubeUrl: string;
 };
 
 const EPISODES: Episode[] = [
@@ -46,6 +48,7 @@ const EPISODES: Episode[] = [
     src: "/croatia.webm",
     duration: "4 min",
     date: "Mar 4, 2026",
+    youtubeUrl: "https://www.youtube.com/watch?v=dq4n71jWZkk",
   },
   {
     id: "kyrgyzstan",
@@ -57,6 +60,7 @@ const EPISODES: Episode[] = [
     src: "/kyrgyzstan.webm",
     duration: "5 min",
     date: "Mar 18, 2026",
+    youtubeUrl: "https://www.youtube.com/watch?v=D-l3dSWbEtg",
   },
   {
     id: "laos",
@@ -68,6 +72,7 @@ const EPISODES: Episode[] = [
     src: "/laos.webm",
     duration: "4 min",
     date: "Apr 1, 2026",
+    youtubeUrl: "https://www.youtube.com/watch?v=i92eRarvfu8",
   },
   {
     id: "new-zealand",
@@ -79,6 +84,7 @@ const EPISODES: Episode[] = [
     src: "/new-zealand.webm",
     duration: "6 min",
     date: "Apr 15, 2026",
+    youtubeUrl: "https://www.youtube.com/watch?v=0NMIZ-PTt8k",
   },
   {
     id: "peru",
@@ -90,6 +96,7 @@ const EPISODES: Episode[] = [
     src: "/peru.mp4",
     duration: "5 min",
     date: "Apr 29, 2026",
+    youtubeUrl: "https://www.youtube.com/watch?v=Zk9J5xnTVMA",
   },
   {
     id: "tanzania",
@@ -101,6 +108,7 @@ const EPISODES: Episode[] = [
     src: "/tanzania.mp4",
     duration: "6 min",
     date: "May 6, 2026",
+    youtubeUrl: "https://www.youtube.com/watch?v=3zUuxEiMcVo",
   },
   {
     id: "turks-and-caicos",
@@ -112,6 +120,7 @@ const EPISODES: Episode[] = [
     src: "/turks-and-caicos.webm",
     duration: "4 min",
     date: "May 20, 2026",
+    youtubeUrl: "https://www.youtube.com/watch?v=deZLj0TyUR8",
   },
 ];
 
@@ -125,6 +134,7 @@ const BG_EXIT: Transition = { duration: 0.5, ease: EASE_OUT };
 export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isDocsOpen, setIsDocsOpen] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
   const active = EPISODES[activeIndex]!;
   const reduceMotion = useReducedMotion();
@@ -138,7 +148,7 @@ export default function Home() {
 
   const { play: playToggle } = useSound("ui/toggle_on");
   const { play: playPopup } = useSound("notification/popup");
-  const { play: playNotification } = useSound("notification/notification");
+  const { play: playSubmit } = useSound("ui/submit");
 
   const openPlayer = useCallback(() => {
     void playPopup();
@@ -149,23 +159,24 @@ export default function Home() {
   const jumpToFirst = useCallback(() => {
     setActiveIndex((index) => {
       if (index === 0) return index;
-      void playNotification();
+      void playSubmit();
       return 0;
     });
-  }, [playNotification]);
+  }, [playSubmit]);
 
   const jumpToLast = useCallback(() => {
     setActiveIndex((index) => {
       const last = EPISODES.length - 1;
       if (index === last) return index;
-      void playNotification();
+      void playSubmit();
       return last;
     });
-  }, [playNotification]);
+  }, [playSubmit]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement) return;
+      if (isDocsOpen) return;
       if (event.key === "p" || event.key === "P") {
         event.preventDefault();
         setIsPlaying((value) => !value);
@@ -187,7 +198,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [playToggle]);
+  }, [playToggle, isDocsOpen]);
 
   useEffect(() => {
     const rail = railRef.current;
@@ -211,6 +222,9 @@ export default function Home() {
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[var(--color-page)] font-sans text-neutral-100">
+      <h1 className="sr-only">
+        Loomix Player — A customizable React video player UI
+      </h1>
       <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden>
         <div
           className="absolute inset-0 overflow-hidden"
@@ -257,15 +271,12 @@ export default function Home() {
         }
       >
         <header className="mx-auto flex w-full max-w-[600px] shrink-0 items-center justify-between">
-          <div className="inline-flex items-center gap-2.5 text-sm font-medium text-white/90 sm:gap-3 sm:text-base">
-            <Image
-              src="/icon.png"
-              alt=""
+          <div className="inline-flex items-center gap-1 text-sm font-medium text-white/90 sm:gap-3 sm:text-base">
+            <IconSphere2
               aria-hidden
-              draggable={false}
-              width={28}
-              height={28}
-              className="h-6 w-6 rounded-full sm:h-7 sm:w-7"
+              size={24}
+              stroke={2}
+              className="h-6 w-6 shrink-0 text-white sm:h-7 sm:w-7"
             />
             <span className="leading-tight font-semibold">Loomix</span>
           </div>
@@ -274,18 +285,19 @@ export default function Home() {
             aria-label="Primary"
             className="flex items-center gap-2 text-sm font-medium"
           >
-            <Link
-              href="/docs"
+            <button
+              type="button"
               onClick={() => {
                 void playPopup();
+                setIsDocsOpen(true);
               }}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1.5 text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 hover:bg-white/[0.12] hover:text-white"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1.5 text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 hover:bg-white/[0.12] hover:text-white"
             >
               <IconBookFilled size={15} aria-hidden />
               Docs
-            </Link>
+            </button>
             <a
-              href="https://github.com"
+              href="https://github.com/haaarshsingh/loomix"
               target="_blank"
               rel="noreferrer noopener"
               aria-label="GitHub"
@@ -297,7 +309,7 @@ export default function Home() {
               <IconBrandGithub size={18} aria-hidden stroke={1.75} />
             </a>
             <a
-              href="https://x.com"
+              href="https://x.com/haaarshsingh"
               target="_blank"
               rel="noreferrer noopener"
               aria-label="X"
@@ -347,12 +359,12 @@ export default function Home() {
               >
                 {active.region}
               </p>
-              <h1
+              <h2
                 className="mb-3.5 text-[clamp(34px,9vw,84px)] leading-[1.02] font-semibold tracking-[-0.02em] sm:mb-5 sm:text-[clamp(44px,6.2vw,84px)] sm:leading-none sm:tracking-[-0.025em]"
                 style={{ textShadow: "0 1px 30px rgba(0,0,0,0.45)" }}
               >
                 {active.title}
-              </h1>
+              </h2>
               <p
                 className="mb-5 text-[13.5px] leading-[1.55] text-balance text-white/[0.88] sm:mb-6 sm:max-w-[460px] sm:text-[14.5px] sm:leading-[1.6]"
                 style={{ textShadow: "0 1px 12px rgba(0,0,0,0.6)" }}
@@ -432,12 +444,39 @@ export default function Home() {
                 key={episode.id}
                 episode={episode}
                 isActive={index === activeIndex}
-                onSelect={() => setActiveIndex(index)}
+                onSelect={() => {
+                  if (index === activeIndex) return;
+                  void playToggle();
+                  setActiveIndex(index);
+                }}
               />
             ))}
           </div>
         </section>
       </div>
+
+      <Drawer.Root open={isDocsOpen} onOpenChange={setIsDocsOpen}>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 z-40 bg-black/60 backdrop-blur-md" />
+          <Drawer.Content
+            aria-describedby={undefined}
+            className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[92vh] flex-col rounded-t-3xl border-t border-white/10 bg-[#0a0a0a] text-neutral-100 outline-none focus:outline-none"
+          >
+            <div
+              aria-hidden
+              className="mx-auto mt-3 mb-4 h-1.5 w-12 shrink-0 rounded-full bg-white/15"
+            />
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-6 pb-10 sm:px-6">
+              <div className="mx-auto w-full max-w-[600px]">
+                <Drawer.Title className="sr-only">
+                  Loomix Player documentation
+                </Drawer.Title>
+                <DocsContent />
+              </div>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
 
       <AnimatePresence>
         {isPlaying && (
@@ -474,7 +513,7 @@ export default function Home() {
                 title={active.title}
                 autoPlay
                 ariaLabel={`${active.title} teaser`}
-                youtubeUrl="https://www.youtube.com"
+                youtubeUrl={active.youtubeUrl}
                 onClose={closePlayer}
                 className="aspect-video max-h-[86vh] w-full rounded-[14px]"
               />
@@ -529,7 +568,13 @@ function ThumbCard({
   return (
     <motion.button
       type="button"
-      onClick={onSelect}
+      onClick={(event) => {
+        // Drop focus immediately so the browser doesn't try to keep this
+        // thumbnail visible via scroll-padding when subsequent arrow-key
+        // navigation programmatically scrolls the rail.
+        event.currentTarget.blur();
+        onSelect();
+      }}
       aria-current={isActive ? "true" : undefined}
       whileTap={{ scale: 0.97 }}
       transition={TAP_TRANSITION}
