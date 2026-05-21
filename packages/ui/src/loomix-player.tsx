@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import {
   IconBrandYoutubeFilled,
@@ -361,13 +362,13 @@ export function LoomixPlayer({
     duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
   const bufferedPercent =
     duration > 0 ? Math.min(100, (buffered / duration) * 100) : 0;
-  const hoverPx = hoverPercent !== null ? hoverPercent * 100 : null;
 
-  const VolumeIcon = isMuted || volume === 0
-    ? IconVolume3
-    : volume < 0.5
-      ? IconVolume2
-      : IconVolume;
+  const VolumeIcon =
+    isMuted || volume === 0
+      ? IconVolume3
+      : volume < 0.5
+        ? IconVolume2
+        : IconVolume;
 
   return (
     <div
@@ -449,69 +450,75 @@ export function LoomixPlayer({
       </AnimatePresence>
 
       <AnimatePresence>
-        {(showControls || controlsLocked) && (title || youtubeUrl || onClose) && (
-          <motion.div
-            key="top-bar"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: EASE }}
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 px-3 pt-3"
-          >
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0) 100%)",
-              }}
-            />
-
-            {title ? (
+        {(showControls || controlsLocked) &&
+          (title || youtubeUrl || onClose) && (
+            <motion.div
+              key="top-bar"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: EASE }}
+              className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 px-3 pt-3"
+            >
               <div
-                className="pointer-events-auto min-w-0 max-w-[60%] truncate pt-1 pl-1 text-[15px] font-medium text-white/95"
-                style={{ textShadow: "0 1px 12px rgba(0,0,0,0.55)" }}
-              >
-                {title}
-              </div>
-            ) : (
-              <div />
-            )}
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0) 100%)",
+                }}
+              />
 
-            <div className="pointer-events-auto ml-auto flex items-center gap-1.5">
-              {youtubeUrl && (
-                <a
-                  href={youtubeUrl}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-3 py-1.5 text-[12.5px] font-medium text-white/90 backdrop-blur-xl transition-colors duration-150 hover:bg-black/60 hover:text-white"
+              {title ? (
+                <div
+                  className="pointer-events-auto min-w-0 max-w-[60%] truncate pt-1 pl-1 text-[15px] font-medium text-white/95"
+                  style={{ textShadow: "0 1px 12px rgba(0,0,0,0.55)" }}
                 >
-                  <IconBrandYoutubeFilled size={15} aria-hidden />
-                  Watch on YouTube
-                </a>
+                  {title}
+                </div>
+              ) : (
+                <div />
               )}
-              {onClose && (
-                <Tooltip label="Close">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    aria-label="Close"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/90 backdrop-blur-xl transition-colors duration-150 hover:bg-black/60 hover:text-white"
+
+              <div className="pointer-events-auto ml-auto flex items-center gap-1.5">
+                {youtubeUrl && (
+                  <a
+                    href={youtubeUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-3 py-1.5 text-[12.5px] font-medium text-white/90 backdrop-blur-xl transition-colors duration-150 hover:bg-black/60 hover:text-white"
                   >
-                    <svg viewBox="0 0 16 16" width={12} height={12} aria-hidden>
-                      <path
-                        d="M3 3 L13 13 M13 3 L3 13"
-                        stroke="currentColor"
-                        strokeWidth={1.6}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                </Tooltip>
-              )}
-            </div>
-          </motion.div>
-        )}
+                    <IconBrandYoutubeFilled size={15} aria-hidden />
+                    Watch on YouTube
+                  </a>
+                )}
+                {onClose && (
+                  <Tooltip label="Close" side="bottom">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      aria-label="Close"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/90 backdrop-blur-xl transition-colors duration-150 hover:bg-black/60 hover:text-white"
+                    >
+                      <svg
+                        viewBox="0 0 16 16"
+                        width={12}
+                        height={12}
+                        aria-hidden
+                      >
+                        <path
+                          d="M3 3 L13 13 M13 3 L3 13"
+                          stroke="currentColor"
+                          strokeWidth={1.6}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                  </Tooltip>
+                )}
+              </div>
+            </motion.div>
+          )}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -545,19 +552,13 @@ export function LoomixPlayer({
               onPointerLeave={onProgressLeave}
               onPointerUp={onProgressRelease}
               onPointerCancel={onProgressRelease}
-              className="pointer-events-auto relative flex h-5 cursor-pointer touch-none items-center select-none"
+              className="pointer-events-auto relative flex h-5 cursor-crosshair touch-none items-center select-none"
             >
               <div className="relative h-[3px] w-full rounded-full bg-white/20">
                 <div
                   className="absolute inset-y-0 left-0 rounded-full bg-white/35"
                   style={{ width: `${bufferedPercent}%` }}
                 />
-                {hoverPx !== null && (
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-white/25"
-                    style={{ width: `${hoverPx}%` }}
-                  />
-                )}
                 <div
                   className="absolute inset-y-0 left-0 rounded-full bg-white"
                   style={{ width: `${progressPercent}%` }}
@@ -568,15 +569,44 @@ export function LoomixPlayer({
                       transform: `translate(50%, -50%) scale(${
                         isScrubbing || hoverPercent !== null ? 1 : 0
                       })`,
-                      transition: "transform 150ms cubic-bezier(0.23, 1, 0.32, 1)",
+                      transition:
+                        "transform 150ms cubic-bezier(0.23, 1, 0.32, 1)",
                     }}
                   />
                 </div>
               </div>
+
+              {hoverPercent !== null && (
+                <div
+                  className="pointer-events-none absolute top-1/2 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-white"
+                  style={{ left: `${hoverPercent * 100}%` }}
+                />
+              )}
+
+              {hoverPercent !== null && duration > 0 && (
+                <div
+                  className="pointer-events-none absolute -translate-x-1/2 whitespace-nowrap text-[12px] tabular-nums"
+                  style={{
+                    left: `${hoverPercent * 100}%`,
+                    bottom: "calc(100% + 8px)",
+                  }}
+                >
+                  <span className="font-semibold text-white">
+                    {formatTime(hoverPercent * duration)}
+                  </span>
+                  <span className="text-white/45">
+                    {" "}
+                    / {formatTime(duration)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="pointer-events-auto flex items-center gap-1 text-white">
-              <ControlButton onClick={togglePlay} label={isPlaying ? "Pause" : "Play"}>
+              <ControlButton
+                onClick={togglePlay}
+                label={isPlaying ? "Pause" : "Play"}
+              >
                 {isPlaying ? (
                   <IconPlayerPauseFilled size={18} aria-hidden />
                 ) : (
@@ -589,7 +619,11 @@ export function LoomixPlayer({
                 onPointerEnter={() => setVolumeOpen(true)}
                 onPointerLeave={() => setVolumeOpen(false)}
               >
-                <ControlButton onClick={toggleMute} label={isMuted ? "Unmute" : "Mute"}>
+                <ControlButton
+                  onClick={toggleMute}
+                  label={isMuted ? "Unmute" : "Mute"}
+                  tooltipHidden={volumeOpen}
+                >
                   <VolumeIcon size={18} aria-hidden />
                 </ControlButton>
                 <AnimatePresence>
@@ -604,24 +638,40 @@ export function LoomixPlayer({
                       role="group"
                       aria-label="Volume"
                     >
-                      <input
-                        type="range"
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        value={isMuted ? 0 : volume}
-                        onChange={(event) => {
-                          const next = Number(event.target.value);
-                          setVolume(next);
-                          setIsMuted(next === 0);
-                        }}
-                        aria-label="Volume"
-                        className="loomix-volume-slider h-24 w-1.5 cursor-pointer appearance-none rounded-full bg-white/15"
-                        style={{
-                          writingMode: "vertical-lr",
-                          direction: "rtl",
-                        }}
-                      />
+                      <div className="relative h-20 w-2.5">
+                        <div className="pointer-events-none absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 overflow-hidden rounded-full bg-white/15">
+                          <div
+                            className="absolute inset-x-0 bottom-0 bg-white"
+                            style={{
+                              height: `${(isMuted ? 0 : volume) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <div
+                          className="pointer-events-none absolute left-1/2 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.4)]"
+                          style={{
+                            bottom: `calc(${(isMuted ? 0 : volume) * 100}% - 5px)`,
+                          }}
+                        />
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={isMuted ? 0 : volume}
+                          onChange={(event) => {
+                            const next = Number(event.target.value);
+                            setVolume(next);
+                            setIsMuted(next === 0);
+                          }}
+                          aria-label="Volume"
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                          style={{
+                            writingMode: "vertical-lr",
+                            direction: "rtl",
+                          }}
+                        />
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -636,7 +686,9 @@ export function LoomixPlayer({
               <div className="ml-auto flex items-center gap-1">
                 <ControlButton
                   onClick={() => setCaptionsEnabled((v) => !v)}
-                  label={captionsEnabled ? "Turn captions off" : "Turn captions on"}
+                  label={
+                    captionsEnabled ? "Turn captions off" : "Turn captions on"
+                  }
                   pressed={captionsEnabled}
                   disabled={!captions || captions.length === 0}
                 >
@@ -648,6 +700,7 @@ export function LoomixPlayer({
                     onClick={() => setSpeedOpen((value) => !value)}
                     label="Playback speed"
                     pressed={speedOpen}
+                    tooltipHidden={speedOpen}
                   >
                     <span className="font-mono text-[12px] tabular-nums">
                       {speed}×
@@ -688,7 +741,10 @@ export function LoomixPlayer({
                                 {isCurrent ? (
                                   <IconCheck size={13} aria-hidden />
                                 ) : (
-                                  <span className="inline-block w-[13px]" aria-hidden />
+                                  <span
+                                    className="inline-block w-[13px]"
+                                    aria-hidden
+                                  />
                                 )}
                                 {value}×
                               </span>
@@ -703,7 +759,9 @@ export function LoomixPlayer({
                 {!disablePictureInPicture && (
                   <ControlButton
                     onClick={togglePip}
-                    label={isPip ? "Exit picture in picture" : "Enter picture in picture"}
+                    label={
+                      isPip ? "Exit picture in picture" : "Picture in picture"
+                    }
                     pressed={isPip}
                   >
                     {isPip ? (
@@ -716,7 +774,7 @@ export function LoomixPlayer({
 
                 <ControlButton
                   onClick={toggleFullscreen}
-                  label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                  label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
                   pressed={isFullscreen}
                 >
                   {isFullscreen ? (
@@ -730,37 +788,12 @@ export function LoomixPlayer({
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .loomix-volume-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 14px;
-          height: 14px;
-          border-radius: 9999px;
-          background: #ffffff;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-          cursor: pointer;
-        }
-        .loomix-volume-slider::-moz-range-thumb {
-          width: 14px;
-          height: 14px;
-          border: none;
-          border-radius: 9999px;
-          background: #ffffff;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-          cursor: pointer;
-        }
-        .loomix-volume-slider::-webkit-slider-runnable-track {
-          background: transparent;
-        }
-        .loomix-volume-slider::-moz-range-track {
-          background: transparent;
-        }
-      `}</style>
     </div>
   );
 }
+
+type TooltipSide = "top" | "bottom";
+type TooltipAlign = "start" | "center" | "end";
 
 type ControlButtonProps = {
   children: React.ReactNode;
@@ -768,6 +801,9 @@ type ControlButtonProps = {
   label: string;
   pressed?: boolean;
   disabled?: boolean;
+  tooltipHidden?: boolean;
+  tooltipSide?: TooltipSide;
+  tooltipAlign?: TooltipAlign;
 };
 
 function ControlButton({
@@ -776,22 +812,141 @@ function ControlButton({
   label,
   pressed,
   disabled,
+  tooltipHidden,
+  tooltipSide,
+  tooltipAlign,
 }: ControlButtonProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      aria-pressed={pressed}
-      disabled={disabled}
-      className={cn(
-        "inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-lg px-2 text-white/85 transition-colors duration-150 hover:bg-white/12 hover:text-white disabled:cursor-not-allowed disabled:text-white/35 disabled:hover:bg-transparent disabled:hover:text-white/35",
-        pressed && "bg-white/12 text-white",
-      )}
+    <Tooltip
+      label={label}
+      hidden={disabled || tooltipHidden}
+      side={tooltipSide}
+      align={tooltipAlign}
     >
-      {children}
-    </button>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        aria-pressed={pressed}
+        disabled={disabled}
+        className={cn(
+          "inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-lg px-2 text-white/85 transition-colors duration-150 hover:bg-white/12 hover:text-white disabled:cursor-not-allowed disabled:text-white/35 disabled:hover:bg-transparent disabled:hover:text-white/35",
+          pressed && "bg-white/12 text-white",
+        )}
+      >
+        {children}
+      </button>
+    </Tooltip>
   );
+}
+
+function Tooltip({
+  label,
+  children,
+  hidden,
+  side = "top",
+  align = "center",
+}: {
+  label: string;
+  children: React.ReactNode;
+  hidden?: boolean;
+  side?: TooltipSide;
+  align?: TooltipAlign;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+  const triggerRef = React.useRef<HTMLSpanElement>(null);
+  const [rect, setRect] = React.useState<DOMRect | null>(null);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const update = () => {
+      if (triggerRef.current) {
+        setRect(triggerRef.current.getBoundingClientRect());
+      }
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open]);
+
+  const show = open && !hidden;
+  const positionStyle: React.CSSProperties = rect
+    ? computeTooltipPosition(rect, side, align)
+    : {};
+  const transformOrigin = side === "top" ? "50% 100%" : "50% 0%";
+  const hiddenTranslate = side === "top" ? "translateY(2px)" : "translateY(-2px)";
+
+  return (
+    <>
+      <span
+        ref={triggerRef}
+        className="relative inline-flex"
+        onPointerEnter={() => setOpen(true)}
+        onPointerLeave={() => setOpen(false)}
+      >
+        {children}
+      </span>
+      {mounted &&
+        rect &&
+        createPortal(
+          <div
+            className="pointer-events-none fixed z-[60]"
+            style={positionStyle}
+          >
+            <span
+              role="tooltip"
+              aria-hidden={!show}
+              className={cn(
+                "block whitespace-nowrap rounded-md border border-white/10 bg-black/85 px-2 py-1 text-[11px] font-medium text-white shadow-[0_4px_18px_rgba(0,0,0,0.45)] backdrop-blur-xl",
+                "transition-[opacity,transform] duration-150 ease-out",
+                show ? "opacity-100" : "opacity-0",
+              )}
+              style={{
+                transformOrigin,
+                transform: show ? "scale(1)" : `scale(0.96) ${hiddenTranslate}`,
+              }}
+            >
+              {label}
+            </span>
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+function computeTooltipPosition(
+  rect: DOMRect,
+  side: TooltipSide,
+  align: TooltipAlign,
+): React.CSSProperties {
+  const GAP = 8;
+  const top = side === "top" ? rect.top - GAP : rect.bottom + GAP;
+  const yTranslate = side === "top" ? "-100%" : "0%";
+  if (align === "start") {
+    return { top, left: rect.left, transform: `translate(0, ${yTranslate})` };
+  }
+  if (align === "end") {
+    return {
+      top,
+      left: rect.right,
+      transform: `translate(-100%, ${yTranslate})`,
+    };
+  }
+  return {
+    top,
+    left: rect.left + rect.width / 2,
+    transform: `translate(-50%, ${yTranslate})`,
+  };
 }
 
 function CaptionsIcon({ active }: { active: boolean }) {

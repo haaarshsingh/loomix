@@ -136,20 +136,32 @@ export default function Home() {
     setHasMounted(true);
   }, []);
 
-  const scrollRail = useCallback((direction: 1 | -1) => {
-    const rail = railRef.current;
-    if (!rail) return;
-    const amount = Math.max(rail.clientWidth * 0.7, 320);
-    rail.scrollBy({ left: amount * direction, behavior: "smooth" });
-  }, []);
-
-  const { play: playToggle } = useSound("notification/popup");
+  const { play: playToggle } = useSound("ui/toggle_on");
+  const { play: playPopup } = useSound("notification/popup");
+  const { play: playNotification } = useSound("notification/notification");
 
   const openPlayer = useCallback(() => {
-    void playToggle();
+    void playPopup();
     setIsPlaying(true);
-  }, [playToggle]);
+  }, [playPopup]);
   const closePlayer = useCallback(() => setIsPlaying(false), []);
+
+  const jumpToFirst = useCallback(() => {
+    setActiveIndex((index) => {
+      if (index === 0) return index;
+      void playNotification();
+      return 0;
+    });
+  }, [playNotification]);
+
+  const jumpToLast = useCallback(() => {
+    setActiveIndex((index) => {
+      const last = EPISODES.length - 1;
+      if (index === last) return index;
+      void playNotification();
+      return last;
+    });
+  }, [playNotification]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -265,7 +277,7 @@ export default function Home() {
             <Link
               href="/docs"
               onClick={() => {
-                void playToggle();
+                void playPopup();
               }}
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1.5 text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 hover:bg-white/[0.12] hover:text-white"
             >
@@ -278,7 +290,7 @@ export default function Home() {
               rel="noreferrer noopener"
               aria-label="GitHub"
               onClick={() => {
-                void playToggle();
+                void playPopup();
               }}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 hover:bg-white/[0.12] hover:text-white"
             >
@@ -290,7 +302,7 @@ export default function Home() {
               rel="noreferrer noopener"
               aria-label="X"
               onClick={() => {
-                void playToggle();
+                void playPopup();
               }}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 hover:bg-white/[0.12] hover:text-white"
             >
@@ -394,12 +406,12 @@ export default function Home() {
           >
             <RailArrow
               direction="left"
-              onClick={() => scrollRail(-1)}
+              onClick={jumpToFirst}
               disabled={activeIndex === 0}
             />
             <RailArrow
               direction="right"
-              onClick={() => scrollRail(1)}
+              onClick={jumpToLast}
               disabled={activeIndex === EPISODES.length - 1}
             />
           </div>
@@ -444,23 +456,6 @@ export default function Home() {
               }
             }}
           >
-            <motion.button
-              type="button"
-              onClick={closePlayer}
-              aria-label="Close player"
-              whileTap={{ scale: 0.97 }}
-              transition={TAP_TRANSITION}
-              className="absolute top-5 right-5 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white/95 hover:bg-white/15"
-            >
-              <svg viewBox="0 0 16 16" width={14} height={14} aria-hidden>
-                <path
-                  d="M3 3 L13 13 M13 3 L3 13"
-                  stroke="currentColor"
-                  strokeWidth={1.6}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </motion.button>
             <motion.div
               key={active.id}
               initial={{ scale: 0.95, opacity: 0 }}
@@ -476,9 +471,11 @@ export default function Home() {
             >
               <LoomixPlayer
                 src={active.src}
+                title={active.title}
                 autoPlay
                 ariaLabel={`${active.title} teaser`}
                 youtubeUrl="https://www.youtube.com"
+                onClose={closePlayer}
                 className="aspect-video max-h-[86vh] w-full rounded-[14px]"
               />
             </motion.div>
