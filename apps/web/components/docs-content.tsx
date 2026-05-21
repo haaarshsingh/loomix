@@ -22,7 +22,7 @@ const USAGE = `import { LoomixPlayer } from "@/components/ui/loomix-player";
 export default function Demo() {
   return (
     <LoomixPlayer
-      src="/croatia.webm"
+      src="https://cdn.harshsingh.me/croatia.webm"
       youtubeUrl="https://youtube.com/watch?v=..."
       className="aspect-video w-full max-w-4xl"
     />

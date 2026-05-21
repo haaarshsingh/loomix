@@ -45,7 +45,7 @@ const EPISODES: Episode[] = [
     title: "Croatia",
     description:
       "Limestone islands rise from a sea the color of cut glass. A series of conversations along the Dalmatian coast, where stone, salt, and centuries shape the shoreline.",
-    src: "/croatia.webm",
+    src: "https://cdn.harshsingh.me/croatia.webm",
     duration: "4 min",
     date: "Mar 4, 2026",
     youtubeUrl: "https://www.youtube.com/watch?v=dq4n71jWZkk",
@@ -57,7 +57,7 @@ const EPISODES: Episode[] = [
     title: "Kyrgyzstan",
     description:
       "In the high pastures of the Tien Shan, the day still follows the horse. Herders, felt-makers, and the small communities holding the rhythm of the steppe.",
-    src: "/kyrgyzstan.webm",
+    src: "https://cdn.harshsingh.me/kyrgyzstan.webm",
     duration: "5 min",
     date: "Mar 18, 2026",
     youtubeUrl: "https://www.youtube.com/watch?v=D-l3dSWbEtg",
@@ -69,7 +69,7 @@ const EPISODES: Episode[] = [
     title: "Laos",
     description:
       "Morning mist on the Mekong, gilded temples, the slow arithmetic of a river country. A study of patience, devotion, and the craft of unhurried places.",
-    src: "/laos.webm",
+    src: "https://cdn.harshsingh.me/laos.webm",
     duration: "4 min",
     date: "Apr 1, 2026",
     youtubeUrl: "https://www.youtube.com/watch?v=i92eRarvfu8",
@@ -81,7 +81,7 @@ const EPISODES: Episode[] = [
     title: "New Zealand",
     description:
       "Glaciers, fjords, and roads that disappear into green. From the Southern Alps to the coast, a portrait of a country that keeps its scale to itself.",
-    src: "/new-zealand.webm",
+    src: "https://cdn.harshsingh.me/new-zealand.webm",
     duration: "6 min",
     date: "Apr 15, 2026",
     youtubeUrl: "https://www.youtube.com/watch?v=0NMIZ-PTt8k",
@@ -93,7 +93,7 @@ const EPISODES: Episode[] = [
     title: "Peru",
     description:
       "Stonework that outlasted empires, and altitudes where the air thins to a whisper. The Sacred Valley as it is lived in now, not only as it is remembered.",
-    src: "/peru.mp4",
+    src: "https://cdn.harshsingh.me/peru.webm",
     duration: "5 min",
     date: "Apr 29, 2026",
     youtubeUrl: "https://www.youtube.com/watch?v=Zk9J5xnTVMA",
@@ -105,7 +105,7 @@ const EPISODES: Episode[] = [
     title: "Tanzania",
     description:
       "Open plains under a sky too wide to frame. The Serengeti at the edge of the long rains, and the people who read its weather like a language.",
-    src: "/tanzania.mp4",
+    src: "https://cdn.harshsingh.me/tanzania.webm",
     duration: "6 min",
     date: "May 6, 2026",
     youtubeUrl: "https://www.youtube.com/watch?v=3zUuxEiMcVo",
@@ -117,7 +117,7 @@ const EPISODES: Episode[] = [
     title: "Turks & Caicos",
     description:
       "Shallow banks of impossible blue, where the water borrows the color of the sky. A closing chapter on islands, light, and the discipline of doing less.",
-    src: "/turks-and-caicos.webm",
+    src: "https://cdn.harshsingh.me/turks-and-caicos.webm",
     duration: "4 min",
     date: "May 20, 2026",
     youtubeUrl: "https://www.youtube.com/watch?v=deZLj0TyUR8",
