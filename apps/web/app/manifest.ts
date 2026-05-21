@@ -5,11 +5,11 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Loomix Player",
     short_name: "Loomix",
     description:
-      "A polished, customizable React video player UI. Drop in a single component for scrubbable progress, volume, playback speed, captions, picture-in-picture, fullscreen, and YouTube — installable via the shadcn CLI or as an npm package.",
+      "A polished, customizable React video player UI. Drop in a single component for scrubbable progress, volume, playback speed, captions, picture-in-picture, fullscreen, and YouTube:  installable via the shadcn CLI or as an npm package.",
     start_url: "/",
     display: "standalone",
     background_color: "#050505",
-    theme_color: "#7c3aed",
+    theme_color: "#040615",
     icons: [
       {
         src: "/icon.png",

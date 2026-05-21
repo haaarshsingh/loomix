@@ -47,7 +47,7 @@ const EPISODES: Episode[] = [
       "Limestone islands rise from a sea the color of cut glass. A series of conversations along the Dalmatian coast, where stone, salt, and centuries shape the shoreline.",
     src: "https://cdn.harshsingh.me/croatia.webm",
     duration: "4 min",
-    date: "Mar 4, 2026",
+    date: "Jun 16, 2021",
     youtubeUrl: "https://www.youtube.com/watch?v=dq4n71jWZkk",
   },
   {
@@ -59,7 +59,7 @@ const EPISODES: Episode[] = [
       "In the high pastures of the Tien Shan, the day still follows the horse. Herders, felt-makers, and the small communities holding the rhythm of the steppe.",
     src: "https://cdn.harshsingh.me/kyrgyzstan.webm",
     duration: "5 min",
-    date: "Mar 18, 2026",
+    date: "Nov 6, 2022",
     youtubeUrl: "https://www.youtube.com/watch?v=D-l3dSWbEtg",
   },
   {
@@ -71,7 +71,7 @@ const EPISODES: Episode[] = [
       "Morning mist on the Mekong, gilded temples, the slow arithmetic of a river country. A study of patience, devotion, and the craft of unhurried places.",
     src: "https://cdn.harshsingh.me/laos.webm",
     duration: "4 min",
-    date: "Apr 1, 2026",
+    date: "Feb 22, 2020",
     youtubeUrl: "https://www.youtube.com/watch?v=i92eRarvfu8",
   },
   {
@@ -83,7 +83,7 @@ const EPISODES: Episode[] = [
       "Glaciers, fjords, and roads that disappear into green. From the Southern Alps to the coast, a portrait of a country that keeps its scale to itself.",
     src: "https://cdn.harshsingh.me/new-zealand.webm",
     duration: "6 min",
-    date: "Apr 15, 2026",
+    date: "May 4, 2022",
     youtubeUrl: "https://www.youtube.com/watch?v=0NMIZ-PTt8k",
   },
   {
@@ -95,7 +95,7 @@ const EPISODES: Episode[] = [
       "Stonework that outlasted empires, and altitudes where the air thins to a whisper. The Sacred Valley as it is lived in now, not only as it is remembered.",
     src: "https://cdn.harshsingh.me/peru.webm",
     duration: "5 min",
-    date: "Apr 29, 2026",
+    date: "May 13, 2014",
     youtubeUrl: "https://www.youtube.com/watch?v=Zk9J5xnTVMA",
   },
   {
@@ -107,7 +107,7 @@ const EPISODES: Episode[] = [
       "Open plains under a sky too wide to frame. The Serengeti at the edge of the long rains, and the people who read its weather like a language.",
     src: "https://cdn.harshsingh.me/tanzania.webm",
     duration: "6 min",
-    date: "May 6, 2026",
+    date: "Jul 7, 2021",
     youtubeUrl: "https://www.youtube.com/watch?v=3zUuxEiMcVo",
   },
   {
@@ -119,7 +119,7 @@ const EPISODES: Episode[] = [
       "Shallow banks of impossible blue, where the water borrows the color of the sky. A closing chapter on islands, light, and the discipline of doing less.",
     src: "https://cdn.harshsingh.me/turks-and-caicos.webm",
     duration: "4 min",
-    date: "May 20, 2026",
+    date: "Jul 6, 2024",
     youtubeUrl: "https://www.youtube.com/watch?v=deZLj0TyUR8",
   },
 ];
@@ -223,7 +223,7 @@ export default function Home() {
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[var(--color-page)] font-sans text-neutral-100">
       <h1 className="sr-only">
-        Loomix Player — A customizable React video player UI
+        Loomix Player:  A customizable React video player UI
       </h1>
       <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden>
         <div

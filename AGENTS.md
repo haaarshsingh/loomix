@@ -15,7 +15,7 @@
 
 ## Learned Workspace Facts
 
-- Turborepo monorepo using Bun (`bun.lock`); only `apps/web` (Next.js 16 app router, React 19) is active — `apps/docs` was removed.
+- Turborepo monorepo using Bun (`bun.lock`); only `apps/web` (Next.js 16 app router, React 19) is active:  `apps/docs` was removed.
 - Product brand is "Loomix"; app icon at `apps/web/public/icon.png`, favicon at `apps/web/app/favicon.ico`.
 - Country teaser videos are hosted on `https://cdn.harshsingh.me/` as `.webm` files (`croatia.webm`, `kyrgyzstan.webm`, `laos.webm`, `new-zealand.webm`, `peru.webm`, `tanzania.webm`, `turks-and-caicos.webm`). They are referenced by full URL from `apps/web/app/page.tsx` and are not stored in the repo.
 - Stack pins in `apps/web`: Next.js 16.2, React 19.2, Tailwind v4 (`@tailwindcss/postcss`), `motion` ^12, `@tabler/icons-react` ^3, TypeScript 5.9.

@@ -22,7 +22,7 @@ const SITE_NAME = "Loomix";
 const PRODUCT_NAME = "Loomix Player";
 const PRODUCT_TAGLINE = "A customizable React video player UI";
 const DESCRIPTION =
-  "A polished, customizable React video player UI. Drop in a single component for scrubbable progress, volume, playback speed, captions, picture-in-picture, fullscreen, and YouTube — installable via the shadcn CLI or as an npm package.";
+  "A drop-in replacement for the native HTML5 video element, with a beautifully customizable UI.";
 const REPO_URL = "https://github.com/haaarshsingh/loomix";
 const AUTHOR_NAME = "Harsh Singh";
 const AUTHOR_URL = "https://harshsingh.me";
@@ -31,7 +31,7 @@ const TWITTER_HANDLE = "@haaarshsingh";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${PRODUCT_NAME} — ${PRODUCT_TAGLINE}`,
+    default: `${PRODUCT_NAME}:  ${PRODUCT_TAGLINE}`,
     template: `%s · ${SITE_NAME}`,
   },
   description: DESCRIPTION,
@@ -63,14 +63,14 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: SITE_NAME,
-    title: `${PRODUCT_NAME} — ${PRODUCT_TAGLINE}`,
+    title: `${PRODUCT_NAME}:  ${PRODUCT_TAGLINE}`,
     description: DESCRIPTION,
     images: [
       {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: `${PRODUCT_NAME} — React video player UI`,
+        alt: `${PRODUCT_NAME}:  React video player UI`,
         type: "image/png",
       },
     ],
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: TWITTER_HANDLE,
     creator: TWITTER_HANDLE,
-    title: `${PRODUCT_NAME} — ${PRODUCT_TAGLINE}`,
+    title: `${PRODUCT_NAME}:  ${PRODUCT_TAGLINE}`,
     description: DESCRIPTION,
     images: ["/og.png"],
   },
@@ -116,7 +116,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#7c3aed",
+  themeColor: "#040615",
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
