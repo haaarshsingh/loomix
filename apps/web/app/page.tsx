@@ -22,7 +22,7 @@ import {
 } from "@tabler/icons-react";
 import { useSound } from "react-sounds";
 import { Drawer } from "vaul";
-import { LoomixPlayer } from "@repo/ui";
+import { LoomixPlayer } from "loomix";
 import { DocsContent } from "../components/docs-content";
 
 type Episode = {

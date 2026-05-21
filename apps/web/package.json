@@ -11,7 +11,7 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@repo/ui": "*",
+    "loomix": "workspace:*",
     "@tabler/icons-react": "^3.44.0",
     "howler": "^2.2.4",
     "motion": "^12.39.0",
