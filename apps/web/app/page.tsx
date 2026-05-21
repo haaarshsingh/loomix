@@ -143,7 +143,7 @@ export default function Home() {
     rail.scrollBy({ left: amount * direction, behavior: "smooth" });
   }, []);
 
-  const { play: playToggle } = useSound("ui/toggle_on");
+  const { play: playToggle } = useSound("notification/popup");
 
   const openPlayer = useCallback(() => {
     void playToggle();

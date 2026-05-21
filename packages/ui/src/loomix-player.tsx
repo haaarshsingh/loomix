@@ -31,8 +31,12 @@ export type LoomixPlayerProps = {
   src: string;
   /** Optional poster image shown before playback. */
   poster?: string;
-  /** Optional YouTube URL; when set, a "Watch on YouTube" button appears. */
+  /** Optional title rendered in the top-left of the player chrome. */
+  title?: string;
+  /** Optional YouTube URL; when set, a "Watch on YouTube" button appears in the top-right. */
   youtubeUrl?: string;
+  /** Optional close handler; when set, an X button appears in the top-right. */
+  onClose?: () => void;
   /** Optional caption / subtitle tracks. */
   captions?: LoomixCaption[];
   /** Optional accessible label for the player. */
@@ -84,7 +88,9 @@ function cn(...values: Array<string | false | null | undefined>): string {
 export function LoomixPlayer({
   src,
   poster,
+  title,
   youtubeUrl,
+  onClose,
   captions,
   ariaLabel,
   autoPlay = false,
@@ -443,6 +449,72 @@ export function LoomixPlayer({
       </AnimatePresence>
 
       <AnimatePresence>
+        {(showControls || controlsLocked) && (title || youtubeUrl || onClose) && (
+          <motion.div
+            key="top-bar"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: EASE }}
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 px-3 pt-3"
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-24"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0) 100%)",
+              }}
+            />
+
+            {title ? (
+              <div
+                className="pointer-events-auto min-w-0 max-w-[60%] truncate pt-1 pl-1 text-[15px] font-medium text-white/95"
+                style={{ textShadow: "0 1px 12px rgba(0,0,0,0.55)" }}
+              >
+                {title}
+              </div>
+            ) : (
+              <div />
+            )}
+
+            <div className="pointer-events-auto ml-auto flex items-center gap-1.5">
+              {youtubeUrl && (
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-3 py-1.5 text-[12.5px] font-medium text-white/90 backdrop-blur-xl transition-colors duration-150 hover:bg-black/60 hover:text-white"
+                >
+                  <IconBrandYoutubeFilled size={15} aria-hidden />
+                  Watch on YouTube
+                </a>
+              )}
+              {onClose && (
+                <Tooltip label="Close">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Close"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/90 backdrop-blur-xl transition-colors duration-150 hover:bg-black/60 hover:text-white"
+                  >
+                    <svg viewBox="0 0 16 16" width={12} height={12} aria-hidden>
+                      <path
+                        d="M3 3 L13 13 M13 3 L3 13"
+                        stroke="currentColor"
+                        strokeWidth={1.6}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                </Tooltip>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {(showControls || controlsLocked) && (
           <motion.div
             key="controls"
@@ -473,31 +545,34 @@ export function LoomixPlayer({
               onPointerLeave={onProgressLeave}
               onPointerUp={onProgressRelease}
               onPointerCancel={onProgressRelease}
-              className="pointer-events-auto relative h-5 cursor-pointer touch-none select-none"
+              className="pointer-events-auto relative flex h-5 cursor-pointer touch-none items-center select-none"
             >
-              <div className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 overflow-hidden rounded-full bg-white/20">
+              <div className="relative h-[3px] w-full rounded-full bg-white/20">
                 <div
-                  className="absolute inset-y-0 left-0 bg-white/35"
+                  className="absolute inset-y-0 left-0 rounded-full bg-white/35"
                   style={{ width: `${bufferedPercent}%` }}
                 />
                 {hoverPx !== null && (
                   <div
-                    className="absolute inset-y-0 left-0 bg-white/25"
+                    className="absolute inset-y-0 left-0 rounded-full bg-white/25"
                     style={{ width: `${hoverPx}%` }}
                   />
                 )}
                 <div
-                  className="absolute inset-y-0 left-0 bg-white"
+                  className="absolute inset-y-0 left-0 rounded-full bg-white"
                   style={{ width: `${progressPercent}%` }}
-                />
+                >
+                  <div
+                    className="pointer-events-none absolute top-1/2 right-0 h-3 w-3 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
+                    style={{
+                      transform: `translate(50%, -50%) scale(${
+                        isScrubbing || hoverPercent !== null ? 1 : 0
+                      })`,
+                      transition: "transform 150ms cubic-bezier(0.23, 1, 0.32, 1)",
+                    }}
+                  />
+                </div>
               </div>
-              <div
-                className="pointer-events-none absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-transform duration-150"
-                style={{
-                  left: `${progressPercent}%`,
-                  transform: `translate(-50%, -50%) scale(${isScrubbing || hoverPercent !== null ? 1 : 0})`,
-                }}
-              />
             </div>
 
             <div className="pointer-events-auto flex items-center gap-1 text-white">
@@ -637,18 +712,6 @@ export function LoomixPlayer({
                       <IconPictureInPicture size={17} aria-hidden />
                     )}
                   </ControlButton>
-                )}
-
-                {youtubeUrl && (
-                  <a
-                    href={youtubeUrl}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    aria-label="Watch on YouTube"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/85 transition-colors duration-150 hover:bg-white/12 hover:text-white"
-                  >
-                    <IconBrandYoutubeFilled size={18} aria-hidden />
-                  </a>
                 )}
 
                 <ControlButton
