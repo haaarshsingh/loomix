@@ -1,2 +1,2 @@
-export { LoomixPlayer } from "./loomix-player";
-export type { LoomixPlayerProps, LoomixCaption } from "./loomix-player";
+export { LoomixPlayer } from "./loomix-player.js";
+export type { LoomixPlayerProps, LoomixCaption } from "./loomix-player.js";

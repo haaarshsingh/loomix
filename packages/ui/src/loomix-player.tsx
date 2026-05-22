@@ -44,6 +44,8 @@ export type LoomixPlayerProps = {
   ariaLabel?: string;
   /** Auto-play on mount. Defaults to false. */
   autoPlay?: boolean;
+  /** Move keyboard focus to the player on mount so its shortcuts work immediately. Defaults to false. */
+  autoFocus?: boolean;
   /** Start muted. Defaults to false. */
   muted?: boolean;
   /** Loop video. Defaults to false. */
@@ -95,6 +97,7 @@ export function LoomixPlayer({
   captions,
   ariaLabel,
   autoPlay = false,
+  autoFocus = false,
   muted = false,
   loop = false,
   disablePictureInPicture = false,
@@ -120,6 +123,8 @@ export function LoomixPlayer({
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [showControls, setShowControls] = React.useState(true);
   const [speedOpen, setSpeedOpen] = React.useState(false);
+  const [highlightedSpeedIndex, setHighlightedSpeedIndex] =
+    React.useState<number>(-1);
   const [volumeOpen, setVolumeOpen] = React.useState(false);
   const [isScrubbing, setIsScrubbing] = React.useState(false);
   const [hoverPercent, setHoverPercent] = React.useState<number | null>(null);
@@ -152,6 +157,25 @@ export function LoomixPlayer({
       }
     };
   }, [scheduleHide]);
+
+  React.useEffect(() => {
+    if (!autoFocus) return;
+    // Focus on the next frame so the element is mounted and the parent
+    // (e.g. a modal animating in) isn't fighting for focus.
+    const id = window.requestAnimationFrame(() => {
+      containerRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [autoFocus]);
+
+  React.useEffect(() => {
+    if (!speedOpen) {
+      setHighlightedSpeedIndex(-1);
+      return;
+    }
+    const currentIndex = SPEEDS.indexOf(speed);
+    setHighlightedSpeedIndex(currentIndex >= 0 ? currentIndex : 0);
+  }, [speedOpen, speed]);
 
   React.useEffect(() => {
     const video = videoRef.current;
@@ -299,6 +323,52 @@ export function LoomixPlayer({
       if (event.target instanceof HTMLInputElement) return;
       const video = videoRef.current;
       if (!video) return;
+      // While the speed popover is open, the arrow keys (and Enter/Esc)
+      // drive the dropdown instead of seeking/volume.
+      if (speedOpen) {
+        switch (event.key) {
+          case "ArrowDown": {
+            event.preventDefault();
+            setHighlightedSpeedIndex((i) =>
+              Math.min(SPEEDS.length - 1, (i < 0 ? -1 : i) + 1),
+            );
+            return;
+          }
+          case "ArrowUp": {
+            event.preventDefault();
+            setHighlightedSpeedIndex((i) =>
+              Math.max(0, (i < 0 ? SPEEDS.length : i) - 1),
+            );
+            return;
+          }
+          case "Home": {
+            event.preventDefault();
+            setHighlightedSpeedIndex(0);
+            return;
+          }
+          case "End": {
+            event.preventDefault();
+            setHighlightedSpeedIndex(SPEEDS.length - 1);
+            return;
+          }
+          case "Enter":
+          case " ": {
+            event.preventDefault();
+            const next = SPEEDS[highlightedSpeedIndex];
+            if (next !== undefined) setSpeed(next);
+            setSpeedOpen(false);
+            return;
+          }
+          case "Escape":
+          case "Tab": {
+            event.preventDefault();
+            setSpeedOpen(false);
+            return;
+          }
+          default:
+            return;
+        }
+      }
       switch (event.key) {
         case " ":
         case "k":
@@ -355,7 +425,14 @@ export function LoomixPlayer({
           break;
       }
     },
-    [captions, toggleFullscreen, toggleMute, togglePlay],
+    [
+      captions,
+      highlightedSpeedIndex,
+      speedOpen,
+      toggleFullscreen,
+      toggleMute,
+      togglePlay,
+    ],
   );
 
   const progressPercent =
@@ -718,23 +795,33 @@ export function LoomixPlayer({
                         aria-label="Playback speed"
                         className="absolute right-0 bottom-full mb-2 flex w-[120px] flex-col rounded-2xl border border-white/12 bg-neutral-900/90 p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
                       >
-                        {SPEEDS.map((value) => {
+                        {SPEEDS.map((value, idx) => {
                           const isCurrent = value === speed;
+                          const isHighlighted = idx === highlightedSpeedIndex;
                           return (
                             <button
                               key={value}
                               type="button"
                               role="menuitemradio"
                               aria-checked={isCurrent}
+                              data-highlighted={
+                                isHighlighted ? "true" : undefined
+                              }
+                              onMouseEnter={() =>
+                                setHighlightedSpeedIndex(idx)
+                              }
                               onClick={() => {
                                 setSpeed(value);
                                 setSpeedOpen(false);
                               }}
                               className={cn(
-                                "relative flex items-center justify-between rounded-xl px-3 py-1.5 text-left text-[13px] transition-colors duration-100",
+                                "relative flex items-center justify-between rounded-xl px-3 py-1.5 text-left text-[13px] transition-colors duration-0",
                                 isCurrent
                                   ? "bg-[#2f6bff] text-white"
-                                  : "text-white/85 hover:bg-white/10",
+                                  : cn(
+                                      "text-white/85 hover:bg-white/10",
+                                      isHighlighted && "bg-white/10",
+                                    ),
                               )}
                             >
                               <span className="inline-flex items-center gap-1.5">
