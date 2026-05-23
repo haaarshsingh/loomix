@@ -131,6 +131,19 @@ const CONTENT_ENTER: Transition = { duration: 0.5, ease: EASE_OUT };
 const CONTENT_EXIT: Transition = { duration: 0.22, ease: EASE_OUT };
 const BG_ENTER: Transition = { duration: 0.85, ease: EASE_OUT };
 const BG_EXIT: Transition = { duration: 0.5, ease: EASE_OUT };
+function useIsBelowMd(): boolean {
+  const [isBelowMd, setIsBelowMd] = useState(false);
+  useEffect(() => {
+    // Matches Tailwind's default `md` breakpoint (768px).
+    const mq = window.matchMedia("(max-width: 767.98px)");
+    setIsBelowMd(mq.matches);
+    const onChange = (event: MediaQueryListEvent) => setIsBelowMd(event.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return isBelowMd;
+}
+
 export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -138,6 +151,7 @@ export default function Home() {
   const [hasMounted, setHasMounted] = useState(false);
   const active = EPISODES[activeIndex]!;
   const reduceMotion = useReducedMotion();
+  const isBelowMd = useIsBelowMd();
 
   const railRef = useRef<HTMLDivElement | null>(null);
   const isFirstRender = useRef(true);
@@ -156,22 +170,42 @@ export default function Home() {
   }, [playPopup]);
   const closePlayer = useCallback(() => setIsPlaying(false), []);
 
-  const jumpToFirst = useCallback(() => {
-    setActiveIndex((index) => {
-      if (index === 0) return index;
-      void playSubmit();
-      return 0;
-    });
-  }, [playSubmit]);
+  // On desktop the rail arrows jump straight to the first / last episode (with
+  // the submit "thunk"). On mobile they step one video at a time with the
+  // toggle sound, matching keyboard ←/→ behavior, since jumping the whole rail
+  // on a phone is disorienting.
+  const goPrev = useCallback(() => {
+    if (isBelowMd) {
+      setActiveIndex((index) => {
+        if (index === 0) return index;
+        void playToggle();
+        return index - 1;
+      });
+    } else {
+      setActiveIndex((index) => {
+        if (index === 0) return index;
+        void playSubmit();
+        return 0;
+      });
+    }
+  }, [isBelowMd, playSubmit, playToggle]);
 
-  const jumpToLast = useCallback(() => {
-    setActiveIndex((index) => {
-      const last = EPISODES.length - 1;
-      if (index === last) return index;
-      void playSubmit();
-      return last;
-    });
-  }, [playSubmit]);
+  const goNext = useCallback(() => {
+    const last = EPISODES.length - 1;
+    if (isBelowMd) {
+      setActiveIndex((index) => {
+        if (index === last) return index;
+        void playToggle();
+        return index + 1;
+      });
+    } else {
+      setActiveIndex((index) => {
+        if (index === last) return index;
+        void playSubmit();
+        return last;
+      });
+    }
+  }, [isBelowMd, playSubmit, playToggle]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -426,12 +460,12 @@ export default function Home() {
           >
             <RailArrow
               direction="left"
-              onClick={jumpToFirst}
+              onClick={goPrev}
               disabled={activeIndex === 0}
             />
             <RailArrow
               direction="right"
-              onClick={jumpToLast}
+              onClick={goNext}
               disabled={activeIndex === EPISODES.length - 1}
             />
           </div>
@@ -453,7 +487,10 @@ export default function Home() {
                 episode={episode}
                 isActive={index === activeIndex}
                 onSelect={() => {
-                  if (index === activeIndex) return;
+                  if (index === activeIndex) {
+                    openPlayer();
+                    return;
+                  }
                   void playToggle();
                   setActiveIndex(index);
                 }}

@@ -81,6 +81,51 @@ function cn(...values: Array<string | false | null | undefined>): string {
 }
 
 /**
+ * Returns `true` on devices whose primary input supports hover (mouse / trackpad),
+ * `false` on touch-only devices. Defaults to `true` during SSR / first paint so the
+ * desktop layout doesn't flash on hydration.
+ */
+function useHasHover(): boolean {
+  const [hasHover, setHasHover] = React.useState(true);
+  React.useEffect(() => {
+    const mq = window.matchMedia("(hover: hover)");
+    setHasHover(mq.matches);
+    const onChange = (event: MediaQueryListEvent) => setHasHover(event.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return hasHover;
+}
+
+/**
+ * Tracks the bounding rect of `ref` while `open` is true, updating on resize and
+ * scroll so portaled popovers can follow their trigger.
+ */
+function useTriggerRect(
+  ref: React.RefObject<HTMLElement | null>,
+  open: boolean,
+): DOMRect | null {
+  const [rect, setRect] = React.useState<DOMRect | null>(null);
+  React.useEffect(() => {
+    if (!open || !ref.current) {
+      setRect(null);
+      return;
+    }
+    const update = () => {
+      if (ref.current) setRect(ref.current.getBoundingClientRect());
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, ref]);
+  return rect;
+}
+
+/**
  * `LoomixPlayer` is a polished React video player with custom controls:
  * play / pause, scrubbable progress, volume, playback speed, captions toggle,
  * picture-in-picture, fullscreen and an optional "Watch on YouTube" link.
@@ -108,6 +153,15 @@ export function LoomixPlayer({
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const hideTimerRef = React.useRef<number | null>(null);
+  const speedTriggerRef = React.useRef<HTMLDivElement | null>(null);
+  const speedPopoverRef = React.useRef<HTMLDivElement | null>(null);
+  const volumeTriggerRef = React.useRef<HTMLDivElement | null>(null);
+  const volumePopoverRef = React.useRef<HTMLDivElement | null>(null);
+  const volumeCloseTimerRef = React.useRef<number | null>(null);
+
+  const hasHover = useHasHover();
+  const [portalMounted, setPortalMounted] = React.useState(false);
+  React.useEffect(() => setPortalMounted(true), []);
 
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
@@ -130,6 +184,56 @@ export function LoomixPlayer({
   const [hoverPercent, setHoverPercent] = React.useState<number | null>(null);
 
   const controlsLocked = speedOpen || volumeOpen || isScrubbing || !isPlaying;
+
+  const speedRect = useTriggerRect(speedTriggerRef, speedOpen);
+  const volumeRect = useTriggerRect(volumeTriggerRef, volumeOpen);
+
+  const cancelVolumeClose = React.useCallback(() => {
+    if (volumeCloseTimerRef.current !== null) {
+      window.clearTimeout(volumeCloseTimerRef.current);
+      volumeCloseTimerRef.current = null;
+    }
+  }, []);
+  const openVolume = React.useCallback(() => {
+    cancelVolumeClose();
+    setVolumeOpen(true);
+  }, [cancelVolumeClose]);
+  // Hover-close uses a short grace period so the mouse can move from the
+  // button into the (now portaled) slider without crossing into a "leave".
+  const deferVolumeClose = React.useCallback(() => {
+    cancelVolumeClose();
+    volumeCloseTimerRef.current = window.setTimeout(() => {
+      setVolumeOpen(false);
+      volumeCloseTimerRef.current = null;
+    }, 140);
+  }, [cancelVolumeClose]);
+  React.useEffect(() => () => cancelVolumeClose(), [cancelVolumeClose]);
+
+  React.useEffect(() => {
+    if (!speedOpen) return;
+    const handler = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (speedTriggerRef.current?.contains(target)) return;
+      if (speedPopoverRef.current?.contains(target)) return;
+      setSpeedOpen(false);
+    };
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
+  }, [speedOpen]);
+
+  React.useEffect(() => {
+    if (!volumeOpen) return;
+    const handler = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (volumeTriggerRef.current?.contains(target)) return;
+      if (volumePopoverRef.current?.contains(target)) return;
+      setVolumeOpen(false);
+    };
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
+  }, [volumeOpen]);
 
   const scheduleHide = React.useCallback(() => {
     if (hideTimerRef.current !== null) {
@@ -217,6 +321,21 @@ export function LoomixPlayer({
   React.useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    // iOS Safari fires webkit-prefixed events on the <video> element when it
+    // enters/leaves its native fullscreen player.
+    const onBegin = () => setIsFullscreen(true);
+    const onEnd = () => setIsFullscreen(false);
+    video.addEventListener("webkitbeginfullscreen", onBegin);
+    video.addEventListener("webkitendfullscreen", onEnd);
+    return () => {
+      video.removeEventListener("webkitbeginfullscreen", onBegin);
+      video.removeEventListener("webkitendfullscreen", onEnd);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
     const onEnter = () => setIsPip(true);
     const onLeave = () => setIsPip(false);
     video.addEventListener("enterpictureinpicture", onEnter);
@@ -257,15 +376,39 @@ export function LoomixPlayer({
 
   const toggleFullscreen = React.useCallback(async () => {
     const el = containerRef.current;
+    const video = videoRef.current;
     if (!el) return;
-    try {
-      if (document.fullscreenElement === el) {
-        await document.exitFullscreen();
-      } else {
-        await el.requestFullscreen();
+    type WebkitVideo = HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+      webkitExitFullscreen?: () => void;
+      webkitDisplayingFullscreen?: boolean;
+    };
+    const webkitVideo = video as WebkitVideo | null;
+    // Prefer the standard element-level fullscreen API (desktop + iPadOS).
+    if (typeof el.requestFullscreen === "function") {
+      try {
+        if (document.fullscreenElement === el) {
+          await document.exitFullscreen();
+        } else {
+          await el.requestFullscreen();
+        }
+        return;
+      } catch {
+        // Fall through to the webkit fallback below.
       }
-    } catch {
-      // Some browsers reject fullscreen requests; silently ignore.
+    }
+    // iPhone Safari only exposes fullscreen on the <video> element via the
+    // legacy webkit API, so fall back to that.
+    if (webkitVideo && typeof webkitVideo.webkitEnterFullscreen === "function") {
+      try {
+        if (webkitVideo.webkitDisplayingFullscreen) {
+          webkitVideo.webkitExitFullscreen?.();
+        } else {
+          webkitVideo.webkitEnterFullscreen();
+        }
+      } catch {
+        // Silently ignore; the browser may block the request.
+      }
     }
   }, []);
 
@@ -519,9 +662,12 @@ export function LoomixPlayer({
             exit={{ opacity: 0, scale: 0.92 }}
             transition={{ duration: 0.18, ease: EASE }}
             aria-label="Play"
-            className="absolute inset-0 m-auto inline-flex h-[88px] w-[88px] items-center justify-center rounded-full border border-white/20 bg-black/40 text-white shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl hover:bg-black/55"
+            className="absolute inset-0 m-auto inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl hover:bg-black/55 md:h-[88px] md:w-[88px]"
           >
-            <IconPlayerPlayFilled size={32} aria-hidden />
+            <IconPlayerPlayFilled
+              aria-hidden
+              className="size-4 md:size-8"
+            />
           </motion.button>
         )}
       </AnimatePresence>
@@ -693,65 +839,21 @@ export function LoomixPlayer({
 
               <div
                 className="relative"
-                onPointerEnter={() => setVolumeOpen(true)}
-                onPointerLeave={() => setVolumeOpen(false)}
+                ref={volumeTriggerRef}
+                onPointerEnter={hasHover ? openVolume : undefined}
+                onPointerLeave={hasHover ? deferVolumeClose : undefined}
               >
                 <ControlButton
-                  onClick={toggleMute}
+                  onClick={
+                    hasHover
+                      ? toggleMute
+                      : () => setVolumeOpen((value) => !value)
+                  }
                   label={isMuted ? "Unmute" : "Mute"}
                   tooltipHidden={volumeOpen}
                 >
                   <VolumeIcon size={18} aria-hidden />
                 </ControlButton>
-                <AnimatePresence>
-                  {volumeOpen && (
-                    <motion.div
-                      key="volume-popover"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 6 }}
-                      transition={{ duration: 0.16, ease: EASE }}
-                      className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 rounded-full border border-white/12 bg-neutral-900/85 px-2 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl"
-                      role="group"
-                      aria-label="Volume"
-                    >
-                      <div className="relative h-20 w-2.5">
-                        <div className="pointer-events-none absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 overflow-hidden rounded-full bg-white/15">
-                          <div
-                            className="absolute inset-x-0 bottom-0 bg-white"
-                            style={{
-                              height: `${(isMuted ? 0 : volume) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <div
-                          className="pointer-events-none absolute left-1/2 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.4)]"
-                          style={{
-                            bottom: `calc(${(isMuted ? 0 : volume) * 100}% - 5px)`,
-                          }}
-                        />
-                        <input
-                          type="range"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          value={isMuted ? 0 : volume}
-                          onChange={(event) => {
-                            const next = Number(event.target.value);
-                            setVolume(next);
-                            setIsMuted(next === 0);
-                          }}
-                          aria-label="Volume"
-                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                          style={{
-                            writingMode: "vertical-lr",
-                            direction: "rtl",
-                          }}
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
 
               <div className="ml-1 inline-flex items-baseline gap-1 font-mono text-[12px] tabular-nums text-white/85">
@@ -772,7 +874,7 @@ export function LoomixPlayer({
                   <CaptionsIcon active={captionsEnabled} />
                 </ControlButton>
 
-                <div className="relative">
+                <div className="relative" ref={speedTriggerRef}>
                   <ControlButton
                     onClick={() => setSpeedOpen((value) => !value)}
                     label="Playback speed"
@@ -783,64 +885,6 @@ export function LoomixPlayer({
                       {speed}×
                     </span>
                   </ControlButton>
-                  <AnimatePresence>
-                    {speedOpen && (
-                      <motion.div
-                        key="speed-popover"
-                        initial={{ opacity: 0, y: 6, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 6, scale: 0.98 }}
-                        transition={{ duration: 0.16, ease: EASE }}
-                        role="menu"
-                        aria-label="Playback speed"
-                        className="absolute right-0 bottom-full mb-2 flex w-[120px] flex-col rounded-2xl border border-white/12 bg-neutral-900/90 p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
-                      >
-                        {SPEEDS.map((value, idx) => {
-                          const isCurrent = value === speed;
-                          const isHighlighted = idx === highlightedSpeedIndex;
-                          return (
-                            <button
-                              key={value}
-                              type="button"
-                              role="menuitemradio"
-                              aria-checked={isCurrent}
-                              data-highlighted={
-                                isHighlighted ? "true" : undefined
-                              }
-                              onMouseEnter={() =>
-                                setHighlightedSpeedIndex(idx)
-                              }
-                              onClick={() => {
-                                setSpeed(value);
-                                setSpeedOpen(false);
-                              }}
-                              className={cn(
-                                "relative flex items-center justify-between rounded-xl px-3 py-1.5 text-left text-[13px] transition-colors duration-0",
-                                isCurrent
-                                  ? "bg-[#2f6bff] text-white"
-                                  : cn(
-                                      "text-white/85 hover:bg-white/10",
-                                      isHighlighted && "bg-white/10",
-                                    ),
-                              )}
-                            >
-                              <span className="inline-flex items-center gap-1.5">
-                                {isCurrent ? (
-                                  <IconCheck size={13} aria-hidden />
-                                ) : (
-                                  <span
-                                    className="inline-block w-[13px]"
-                                    aria-hidden
-                                  />
-                                )}
-                                {value}×
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
 
                 {!disablePictureInPicture && (
@@ -875,6 +919,135 @@ export function LoomixPlayer({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {portalMounted &&
+        createPortal(
+          <AnimatePresence>
+            {speedOpen && speedRect && (
+              <motion.div
+                key="speed-popover"
+                ref={speedPopoverRef}
+                initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                transition={{ duration: 0.16, ease: EASE }}
+                role="menu"
+                aria-label="Playback speed"
+                style={{
+                  position: "fixed",
+                  bottom: window.innerHeight - speedRect.top + 8,
+                  right: window.innerWidth - speedRect.right,
+                  zIndex: 60,
+                }}
+                className="flex w-[120px] flex-col rounded-2xl border border-white/12 bg-neutral-900/90 p-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+              >
+                {SPEEDS.map((value, idx) => {
+                  const isCurrent = value === speed;
+                  const isHighlighted = idx === highlightedSpeedIndex;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={isCurrent}
+                      data-highlighted={isHighlighted ? "true" : undefined}
+                      onMouseEnter={() => setHighlightedSpeedIndex(idx)}
+                      onClick={() => {
+                        setSpeed(value);
+                        setSpeedOpen(false);
+                      }}
+                      className={cn(
+                        "relative flex items-center justify-between rounded-xl px-3 py-1.5 text-left text-[13px] transition-colors duration-0",
+                        isCurrent
+                          ? "bg-[#2f6bff] text-white"
+                          : cn(
+                              "text-white/85 hover:bg-white/10",
+                              isHighlighted && "bg-white/10",
+                            ),
+                      )}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        {isCurrent ? (
+                          <IconCheck size={13} aria-hidden />
+                        ) : (
+                          <span
+                            className="inline-block w-[13px]"
+                            aria-hidden
+                          />
+                        )}
+                        {value}×
+                      </span>
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
+
+      {portalMounted &&
+        createPortal(
+          <AnimatePresence>
+            {volumeOpen && volumeRect && (
+              <motion.div
+                key="volume-popover"
+                ref={volumePopoverRef}
+                initial={{ opacity: 0, y: 6, x: "-50%" }}
+                animate={{ opacity: 1, y: 0, x: "-50%" }}
+                exit={{ opacity: 0, y: 6, x: "-50%" }}
+                transition={{ duration: 0.16, ease: EASE }}
+                role="group"
+                aria-label="Volume"
+                style={{
+                  position: "fixed",
+                  bottom: window.innerHeight - volumeRect.top + 8,
+                  left: volumeRect.left + volumeRect.width / 2,
+                  zIndex: 60,
+                }}
+                className="rounded-full border border-white/12 bg-neutral-900/85 px-2 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+                onPointerEnter={hasHover ? openVolume : undefined}
+                onPointerLeave={hasHover ? deferVolumeClose : undefined}
+              >
+                <div className="relative h-20 w-2.5">
+                  <div className="pointer-events-none absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 overflow-hidden rounded-full bg-white/15">
+                    <div
+                      className="absolute inset-x-0 bottom-0 bg-white"
+                      style={{
+                        height: `${(isMuted ? 0 : volume) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <div
+                    className="pointer-events-none absolute left-1/2 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.4)]"
+                    style={{
+                      bottom: `calc(${(isMuted ? 0 : volume) * 100}% - 5px)`,
+                    }}
+                  />
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={isMuted ? 0 : volume}
+                    onChange={(event) => {
+                      const next = Number(event.target.value);
+                      setVolume(next);
+                      setIsMuted(next === 0);
+                    }}
+                    aria-label="Volume"
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                    style={{
+                      writingMode: "vertical-lr",
+                      direction: "rtl",
+                    }}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
     </div>
   );
 }
