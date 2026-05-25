@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify tag matches package version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./packages/ui/package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "Release tag '${GITHUB_REF_NAME}' (parsed as '${TAG}') does not match packages/ui/package.json version '${PKG}'." >&2
+            exit 1
+          fi
+          echo "Tag and package version both at ${PKG}."
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Type-check
+        run: bun run check-types
+
+      - name: Pack tarball
+        working-directory: packages/ui
+        run: npm pack
+
+      - name: Publish to npm
+        working-directory: packages/ui
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Upload tarball to GitHub Release
+        run: gh release upload "$GITHUB_REF_NAME" packages/ui/loomix-*.tgz --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

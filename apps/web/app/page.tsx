@@ -283,10 +283,11 @@ export default function Home() {
               muted
               loop
               playsInline
+              draggable={false}
               initial={hasMounted ? { opacity: 0 } : false}
               animate={{ opacity: 1, transition: BG_ENTER }}
               exit={{ opacity: 0, transition: BG_EXIT }}
-              className="absolute inset-0 h-full w-full object-cover brightness-[0.6] saturate-[1.05]"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover brightness-[0.6] saturate-[1.05] select-none"
             />
           </AnimatePresence>
         </div>
@@ -333,7 +334,7 @@ export default function Home() {
                 void playPopup();
                 setIsDocsOpen(true);
               }}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1.5 text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 hover:bg-white/[0.12] hover:text-white"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1.5 text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 select-none hover:bg-white/[0.12] hover:text-white"
             >
               <IconBookFilled size={15} aria-hidden />
               Docs
@@ -419,7 +420,7 @@ export default function Home() {
                 onClick={openPlayer}
                 whileTap={{ scale: 0.97 }}
                 transition={TAP_TRANSITION}
-                className="inline-flex items-center gap-2 rounded-full border border-white/50 px-3.5 py-1.5 text-[13px] font-medium text-neutral-900 backdrop-blur-[24px] backdrop-saturate-[1.4] hover:bg-white/95 sm:gap-2.5 sm:px-4 sm:py-2 sm:text-sm"
+                className="inline-flex items-center gap-2 rounded-full border border-white/50 px-3.5 py-1.5 text-[13px] font-medium text-neutral-900 backdrop-blur-[24px] backdrop-saturate-[1.4] select-none hover:bg-white/95 sm:gap-2.5 sm:px-4 sm:py-2 sm:text-sm"
                 style={{
                   background: "rgba(240,240,240,0.92)",
                   boxShadow:
@@ -644,7 +645,8 @@ function ThumbCard({
           loop
           playsInline
           preload="metadata"
-          className="block h-full w-full object-cover"
+          draggable={false}
+          className="pointer-events-none block h-full w-full object-cover select-none"
         />
       </motion.div>
       <motion.span
