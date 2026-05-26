@@ -71,3 +71,7 @@ export default function Demo() {
   );
 }
 ```
+
+***
+
+Built by [Harsh Singh](https://harshsingh.me)
