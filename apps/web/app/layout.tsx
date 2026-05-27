@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Space_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -184,6 +185,11 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <Script
+          src="https://stats.harshsingh.me/script.js"
+          data-website-id="49095c71-f96e-4fc1-89d7-3d94cc7039e4"
+          strategy="afterInteractive"
         />
         {children}
       </body>
