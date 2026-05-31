@@ -1,3 +1,5 @@
+https://github.com/user-attachments/assets/b581a248-5c61-4520-a0ad-c2fe5f962e5a
+
 # Halftone Dots
 
 Recreate any image as an animated **halftone dot field** on a single HTML5 `<canvas>` — and morph between images with a dramatic radial wave (the old dots implode from the center, the new ones explode back in with overshoot).
@@ -47,7 +49,3 @@ export default function Example() {
 pnpm install
 pnpm dev
 ```
-
-## License
-
-[MIT](./LICENSE)
