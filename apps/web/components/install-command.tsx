@@ -20,11 +20,11 @@ export function InstallCommand() {
       type="button"
       onClick={onCopy}
       aria-label="Copy install command"
-      className="inline-flex h-10 items-center gap-3 rounded-full border border-[var(--color-hair)] bg-white py-0 pr-1.5 pl-3.5 font-mono text-[13px] text-[var(--color-ink)] transition-transform duration-150 select-none active:scale-[0.98]"
+      className="inline-flex h-10 items-center gap-3 rounded-full border border-[var(--color-hair)] bg-white py-0 pr-1.5 pl-3.5 font-mono text-[13px] text-[var(--color-ink)] transition-transform duration-200 ease-strong-out select-none active:scale-[0.97]"
     >
       <span>{COMMAND}</span>
       <span
-        className="t-icon-swap inline-flex h-[30px] w-[30px] items-center justify-center rounded-full border border-[var(--color-hair)] bg-[var(--color-page)] text-[var(--color-muted)]"
+        className="t-icon-swap h-[30px] w-[30px] items-center justify-center rounded-full border border-[var(--color-hair)] bg-[var(--color-page)] text-[var(--color-muted)]"
         data-state={copied ? "b" : "a"}
       >
         <span className="t-icon inline-flex" data-icon="a" aria-hidden>

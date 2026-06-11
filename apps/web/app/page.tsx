@@ -69,7 +69,7 @@ export default function Home() {
                 href={REPO_URL}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex h-10 items-center gap-3 rounded-xl bg-[#18181b] px-3 text-sm text-white transition-[background,transform] duration-150 select-none hover:bg-[#27272a] active:scale-[0.98]"
+                className="inline-flex h-10 items-center gap-3 rounded-xl bg-[#18181b] px-3 text-sm text-white transition-[background-color,transform] duration-200 ease-strong-out select-none hover:bg-[#27272a] active:scale-[0.97]"
               >
                 <GithubIcon size={20} />
                 {REPO}
