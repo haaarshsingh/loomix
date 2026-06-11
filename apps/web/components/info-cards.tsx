@@ -19,7 +19,7 @@ export function InfoCards() {
         icon={<IconDownload size={18} aria-hidden />}
         title="Install"
         body="Add the player via the shadcn registry or npm package."
-        href={`${REPO_URL}#installation`}
+        href="https://www.npmjs.com/package/loomix"
         cta="Get started"
       />
       <InfoCard
