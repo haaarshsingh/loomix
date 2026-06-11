@@ -1,0 +1,81 @@
+{
+  "name": "loomix",
+  "version": "0.1.1",
+  "description": "A drop-in replacement for the native HTML5 video element, with a beautifully customizable UI.",
+  "keywords": [
+    "react",
+    "video",
+    "video-player",
+    "html5-video",
+    "captions",
+    "picture-in-picture",
+    "fullscreen",
+    "tailwind",
+    "shadcn",
+    "youtube"
+  ],
+  "homepage": "https://loomix.harshsingh.me",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haaarshsingh/loomix.git",
+    "directory": "packages/ui"
+  },
+  "bugs": "https://github.com/haaarshsingh/loomix/issues",
+  "license": "Apache-2.0",
+  "author": "Harsh Singh (https://harshsingh.me)",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "require": "./dist/index.cjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit",
+    "prepublishOnly": "bun run clean && bun run build"
+  },
+  "peerDependencies": {
+    "react": "^18.3 || ^19",
+    "react-dom": "^18.3 || ^19"
+  },
+  "dependencies": {
+    "@tabler/icons-react": "^3.44.0",
+    "motion": "^12.39.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@types/node": "^22.15.3",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "eslint": "^9.39.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tsup": "^8.5.1",
+    "typescript": "5.9.2"
+  }
+}
