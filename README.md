@@ -8,10 +8,6 @@
 
 <p align="center">A drop-in replacement for the native HTML5 video element, with a beautifully customizable UI.</p>
 
-### About
-
-This is the monorepo for Loomix, a polished React video player with scrubbable progress, volume, playback speed, captions, picture-in-picture, fullscreen, and much more, all in a single drop-in component.
-
 ### Packages
 
 - **ui**: `@repo/ui` — internal workspace containing the `LoomixPlayer` React component source. Published publicly as the `loomix` npm package and via the shadcn registry served from `apps/web/registry`.
