@@ -709,7 +709,7 @@ export function LoomixPlayer({
                     href={youtubeUrl}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-3 py-1.5 text-[12.5px] font-medium text-white/90 backdrop-blur-xl transition-colors duration-150 hover:bg-black/60 hover:text-white"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-3 py-1.5 text-[12.5px] font-medium whitespace-nowrap text-white/90 backdrop-blur-xl transition-colors duration-150 hover:bg-black/60 hover:text-white"
                   >
                     <IconBrandYoutubeFilled size={15} aria-hidden />
                     Watch on YouTube

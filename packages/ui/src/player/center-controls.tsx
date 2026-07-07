@@ -1,13 +1,9 @@
 "use client";
 
 import * as React from "react";
-import {
-  IconPlayerPauseFilled,
-  IconPlayerPlayFilled,
-  IconRotate,
-  IconRotateClockwise,
-} from "@tabler/icons-react";
+import { IconRotate, IconRotateClockwise } from "@tabler/icons-react";
 import { GlassFilter, type GlassAssets } from "./liquid-glass";
+import { PlayPauseIcon } from "./play-pause-icon";
 import { cn, SKIP_SECONDS } from "./utils";
 
 const GLASS_BUTTON_CLASS =
@@ -51,14 +47,14 @@ export function CenterControls({
           <GlassFilter
             id={`${glassFilterId}-play`}
             assets={playGlass}
-            size={isMdUp ? 88 : 44}
+            size={isMdUp ? 88 : 64}
           />
         )}
         {skipGlass && (
           <GlassFilter
             id={`${glassFilterId}-skip`}
             assets={skipGlass}
-            size={isMdUp ? 66 : 33}
+            size={isMdUp ? 66 : 48}
           />
         )}
       </svg>
@@ -88,7 +84,7 @@ export function CenterControls({
           tabIndex={visible ? undefined : -1}
           className={cn(
             GLASS_BUTTON_CLASS,
-            "h-11 w-11 md:h-[88px] md:w-[88px]",
+            "h-16 w-16 md:h-[88px] md:w-[88px]",
             visible
               ? "pointer-events-auto opacity-100"
               : "pointer-events-none opacity-0",
@@ -99,33 +95,7 @@ export function CenterControls({
               : undefined
           }
         >
-          {/* Play/pause cross-fade: both icons stacked in one grid cell,
-              swapped with opacity + scale (+ a touch of blur to mask the
-              crossfade). */}
-          <span className="relative inline-grid place-items-center">
-            <span
-              aria-hidden
-              className={cn(
-                "col-start-1 row-start-1 inline-flex transition-[opacity,scale,filter] duration-200 ease-in-out motion-reduce:transition-none",
-                isPlaying
-                  ? "scale-100 opacity-100 blur-none"
-                  : "scale-[0.25] opacity-0 blur-[2px]",
-              )}
-            >
-              <IconPlayerPauseFilled className="size-4 md:size-8" />
-            </span>
-            <span
-              aria-hidden
-              className={cn(
-                "col-start-1 row-start-1 inline-flex transition-[opacity,scale,filter] duration-200 ease-in-out motion-reduce:transition-none",
-                isPlaying
-                  ? "scale-[0.25] opacity-0 blur-[2px]"
-                  : "scale-100 opacity-100 blur-none",
-              )}
-            >
-              <IconPlayerPlayFilled className="size-4 md:size-8" />
-            </span>
-          </span>
+          <PlayPauseIcon isPlaying={isPlaying} className="size-6 md:size-8" />
         </button>
 
         {!disableSkip && (
@@ -163,7 +133,7 @@ function SkipButton({
       className={cn(
         "group/skip shrink-0",
         GLASS_BUTTON_CLASS,
-        "h-[33px] w-[33px] md:h-[66px] md:w-[66px]",
+        "h-12 w-12 md:h-[66px] md:w-[66px]",
         visible
           ? "pointer-events-auto opacity-100"
           : "pointer-events-none opacity-0",
@@ -180,7 +150,7 @@ function SkipButton({
         )}
       >
         <Icon
-          className="size-3 md:size-6"
+          className="size-4 md:size-6"
           style={{ transform: "scaleX(-1) scaleY(-1)" }}
         />
       </span>

@@ -8,8 +8,6 @@ import {
   IconMinimize,
   IconPictureInPicture,
   IconPictureInPictureOff,
-  IconPlayerPauseFilled,
-  IconPlayerPlayFilled,
   IconVolume,
   IconVolume2,
   IconVolume3,
@@ -20,6 +18,7 @@ import { ControlButton } from "./player/control-button";
 import { useHasHover, useIsMdUp, useTriggerRect } from "./player/hooks";
 import { useLiquidGlass } from "./player/liquid-glass";
 import { LoadingSkeleton } from "./player/loading-skeleton";
+import { PlayPauseIcon } from "./player/play-pause-icon";
 import { SeekBar } from "./player/seek-bar";
 import { SpeedPopover } from "./player/speed-popover";
 import { TopBar } from "./player/top-bar";
@@ -82,11 +81,11 @@ export function LoomixPlayer({
   const hasHover = useHasHover();
   const isMdUp = useIsMdUp();
 
-  // Sizes must match the buttons' Tailwind classes (h-11/md:h-[88px] and
-  // h-[33px]/md:h-[66px]) because a backdrop-filter displacement map doesn't
+  // Sizes must match the buttons' Tailwind classes (h-16/md:h-[88px] and
+  // h-12/md:h-[66px]) because a backdrop-filter displacement map doesn't
   // scale with the element.
-  const playGlass = useLiquidGlass(isMdUp ? 88 : 44);
-  const skipGlass = useLiquidGlass(isMdUp ? 66 : 33);
+  const playGlass = useLiquidGlass(isMdUp ? 88 : 64);
+  const skipGlass = useLiquidGlass(isMdUp ? 66 : 48);
   const reactId = React.useId();
   const glassFilterId = `loomix-glass-${reactId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const [portalMounted, setPortalMounted] = React.useState(false);
@@ -540,11 +539,7 @@ export function LoomixPlayer({
                   onClick={togglePlay}
                   label={isPlaying ? "Pause" : "Play"}
                 >
-                  {isPlaying ? (
-                    <IconPlayerPauseFilled size={18} aria-hidden />
-                  ) : (
-                    <IconPlayerPlayFilled size={18} aria-hidden />
-                  )}
+                  <PlayPauseIcon isPlaying={isPlaying} className="size-[18px]" />
                 </ControlButton>
               </div>
             )}
@@ -575,11 +570,7 @@ export function LoomixPlayer({
                   onClick={togglePlay}
                   label={isPlaying ? "Pause" : "Play"}
                 >
-                  {isPlaying ? (
-                    <IconPlayerPauseFilled size={18} aria-hidden />
-                  ) : (
-                    <IconPlayerPlayFilled size={18} aria-hidden />
-                  )}
+                  <PlayPauseIcon isPlaying={isPlaying} className="size-[18px]" />
                 </ControlButton>
 
                 {!disableVolume && (
